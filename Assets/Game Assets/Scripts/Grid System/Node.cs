@@ -52,6 +52,12 @@ namespace FiberCase.Grid_System
 
             return compare;
         }
+
+        public void ResetPathfindingData()
+        {
+            GCost=0;
+            HCost = 0;
+        }
         
         public override bool Equals(object obj)
         {
