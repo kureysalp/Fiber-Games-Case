@@ -5,7 +5,7 @@ namespace FiberCase.Event
 {
     public static class EventBus
     {
-        private static readonly Dictionary<Type, List<Delegate>> Subscribers;
+        private static readonly Dictionary<Type, List<Delegate>> Subscribers = new();
 
         public static void Subscribe<T>(Action<T> callback) where T : IEvent
         {
@@ -36,6 +36,10 @@ namespace FiberCase.Event
                 {
                     ((Action<T>)callback)?.Invoke(eventData);
                 }
+            }
+            else
+            {
+                UnityEngine.Debug.LogWarning($"No subscribers found for {type.Name}");
             }
         }
     }

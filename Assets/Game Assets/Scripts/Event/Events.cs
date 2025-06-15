@@ -1,5 +1,10 @@
 ﻿
 namespace FiberCase.Event
 {
-    public struct TestEvent : IEvent { }
+    public struct CoinsPoppedEvent : IEvent
+    {
+        public int CoinAmount;
+        public int CoinValue;
+    }
+    
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using FiberCase.Gameplay;
 using UnityEngine;
 
 namespace FiberCase.Grid_System
@@ -6,6 +7,7 @@ namespace FiberCase.Grid_System
     public class Node : IComparable<Node>
     {
         public bool Walkable { get; set; }
+        public bool IsOccupied { get; private set; }
         public Vector2Int Position { get; }
         public Vector3 WorldPosition { get; set; }
         
@@ -14,6 +16,8 @@ namespace FiberCase.Grid_System
         public int FCost => GCost + HCost;
         
         public Node Parent { get; set; }
+        
+        public CoinHolder CoinHolder { get; private set; }
 
         public void SetGCost(int cost)
         {
@@ -41,6 +45,18 @@ namespace FiberCase.Grid_System
         {
             Walkable = walkable;    
         }
+
+        public void CoinStackOnThisNode(CoinHolder coinHolder)
+        {
+            CoinHolder = coinHolder;
+            IsOccupied = true;
+        }
+
+        public void RemoveCoinHolder()
+        {
+            CoinHolder = null;
+            IsOccupied = false;
+        }
         
         public int CompareTo(Node other)
         {
@@ -55,14 +71,13 @@ namespace FiberCase.Grid_System
 
         public void ResetPathfindingData()
         {
-            GCost=0;
+            GCost = 0;
             HCost = 0;
         }
         
         public override bool Equals(object obj)
         {
-            Node other = obj as Node;
-            if (other == null) return false;
+            if (obj is not Node other) return false;
             return Position.x == other.Position.x && Position.y == other.Position.y;
         }
         

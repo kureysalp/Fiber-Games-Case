@@ -13,55 +13,6 @@ namespace FiberCase.Path_Finding
         {
             _grid = GetComponent<GridManager>();
         }
-
-
-        /*public void FindPath(Node targetPos)
-        {
-            var startNode = _grid.StartNode;
-            var targetNode = targetPos;
-
-            var openSet = new SortedSet<Node>();
-            var closedSet = new HashSet<Node>();
-
-            startNode.SetGCost(0);
-            startNode.SetHCost(GetDistance(startNode, targetNode));
-            startNode.SetParent(null);
-
-            openSet.Add(startNode);
-
-            while (openSet.Count > 0)
-            {
-                var currentNode = openSet.Min;
-                openSet.Remove(currentNode);
-                closedSet.Add(currentNode);
-
-                if (currentNode == targetNode)
-                {
-                    RetracePath(startNode, targetNode);
-                    return;
-                }
-
-                foreach (var neighbour in _grid.GetNeighbours(currentNode))
-                {
-                    if (!neighbour.Walkable || closedSet.Contains(neighbour))
-                        continue;
-
-                    var tentativeGCost = currentNode.GCost + 10;
-
-                    if (tentativeGCost < neighbour.GCost || !openSet.Contains(neighbour))
-                    {
-                        if (openSet.Contains(neighbour))
-                            openSet.Remove(neighbour);
-
-                        neighbour.SetGCost(tentativeGCost);
-                        neighbour.SetHCost(GetDistance(neighbour, targetNode));
-                        neighbour.SetParent(currentNode);
-
-                        openSet.Add(neighbour);
-                    }
-                }
-            }
-        }*/
         
         public async Task<List<Node>> FindPathAsync(Node startNode, Node targetNode)
         {
@@ -92,7 +43,7 @@ namespace FiberCase.Path_Finding
 
                     foreach (var neighbour in _grid.GetNeighbours(currentNode))
                     {
-                        if (!neighbour.Walkable || closedSet.Contains(neighbour))
+                        if (!neighbour.Walkable || neighbour.IsOccupied || closedSet.Contains(neighbour))
                             continue;
 
                         int tentativeGCost = currentNode.GCost + 10;

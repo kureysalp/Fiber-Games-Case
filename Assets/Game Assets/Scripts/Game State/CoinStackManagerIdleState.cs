@@ -22,7 +22,6 @@ namespace FiberCase.Game_State
             base.ExitState();
             
             // TODO: Show input is busy icon.
-            Debug.Log("Found a path, exiting I");
         }
 
         public override async void UpdateState()

@@ -1,15 +1,14 @@
-﻿using System.Collections.Generic;
+﻿using System;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace FiberCase.Gameplay
 {
-    public class CoinStack : MonoBehaviour
+    [Serializable]
+    public class CoinStack
     {
-        private Queue<Coin> _coins = new();
+        [SerializeField] private CoinStackPair[] _coinStackPairs;
 
-        private void CreateStack()
-        {
-            
-        }
+        public CoinStackPair[] CoinStackPairs => _coinStackPairs;
     }
 }

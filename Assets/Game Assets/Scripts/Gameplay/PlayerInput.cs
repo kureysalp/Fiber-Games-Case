@@ -1,6 +1,4 @@
-﻿using System;
-using FiberCase.Event;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace FiberCase.Gameplay
 {
@@ -41,8 +39,6 @@ namespace FiberCase.Gameplay
             {
                 InputMovePosition = hit.point;
                 HasInput = true;
-
-                Debug.Log("touched something");
             }
         }   
     }

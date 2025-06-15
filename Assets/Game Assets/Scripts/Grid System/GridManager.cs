@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using FiberCase.Path_Finding;
 using UnityEngine;
@@ -10,15 +9,18 @@ namespace FiberCase.Grid_System
     {
         public Node[,] Grid { get; private set; }
         
-        [SerializeField] private int _nodeSize;
+        [SerializeField] private float _nodeSize;
         [SerializeField] private int _columns;
         [SerializeField] private int _rows;
         
+        [SerializeField] private GameObject _nodePrefab;
+        
         [SerializeField] private bool _drawGizmos;
+        
 
         private Vector3 _bottomLeftPosition;
 
-        private int _nodeRadius;
+        private float _nodeRadius;
 
         public List<Node> Path { get; private set; }
 
@@ -26,6 +28,8 @@ namespace FiberCase.Grid_System
         public Node StartNode { get; private set; }
         
         private PathFinding _pathFinding;
+
+        [SerializeField] private LayerMask _blockLayer;
 
         private void Awake()
         {
@@ -54,7 +58,11 @@ namespace FiberCase.Grid_System
                                             (_nodeSize * y + _nodeRadius);
                     var nodeGridPosition = new Vector2Int(x, y);
 
-                    Grid[x, y] = new Node(true, nodeGridPosition, nodeWorldPosition);
+                    var isWalkable = !CheckIfBlocked(nodeWorldPosition);
+                    Grid[x, y] = new Node(isWalkable, nodeGridPosition, nodeWorldPosition);
+                    
+                    if(isWalkable)
+                        Instantiate(_nodePrefab, nodeWorldPosition, Quaternion.identity, transform);
                 }
             }
 
@@ -64,10 +72,10 @@ namespace FiberCase.Grid_System
         public async Task<List<Node>> FindPathAsync(Vector3 targetPosition)
         {
             var targetNode = GetNodeFromWorldPosition(targetPosition);
-            Debug.Log("touched node: "+ targetNode);
             if (targetNode == null) return null;
-            
-            return await _pathFinding.FindPathAsync(StartNode, targetNode);
+
+            Path = await _pathFinding.FindPathAsync(GetNodeFromWorldPosition(_startNodePosition.position), targetNode);
+            return Path;
         }
 
         public Node[] GetNeighbours(Node node)
@@ -95,29 +103,35 @@ namespace FiberCase.Grid_System
             return neighbours.ToArray();
         }
 
-        public Node GetNodeFromWorldPosition(Vector3 position)
+        private bool CheckIfBlocked(Vector3 position)
         {
-            var xPercent = Mathf.Clamp01((position.x - _bottomLeftPosition.x) / _columns * _nodeSize);
-            var yPercent = Mathf.Clamp01((position.y - _bottomLeftPosition.y) / _rows * _nodeSize);
-
-            var xPosition = Mathf.RoundToInt((_columns - 1) * xPercent);
-            var yPosition = Mathf.RoundToInt((_rows - 1) * yPercent);
-
-            return Grid[xPosition, yPosition];
+            return Physics.CheckSphere(position, _nodeRadius / 2f, _blockLayer);
         }
+        
+        public Node GetNodeFromWorldPosition(Vector3 worldPosition)
+        {
+            var gridWidth = _columns * _nodeSize;
+            var gridHeight = _rows * _nodeSize;
 
+            var left = transform.position.x - gridWidth / 2f;
+            var bottom = transform.position.z - gridHeight / 2f;
+
+            var x = Mathf.FloorToInt((worldPosition.x - left) / _nodeSize);
+            var y = Mathf.FloorToInt((worldPosition.z - bottom) / _nodeSize);
+
+            x = Mathf.Clamp(x, 0, _columns - 1);
+            y = Mathf.Clamp(y, 0, _rows - 1);
+
+            return Grid[x, y];
+        }
+        
         public Node GetNodeFromGridPosition(Vector2Int position)
         {
             if (position.x < 0 || position.x >= _columns || position.y < 0 || position.y >= _rows) return null;
             
             return Grid[position.x, position.y];
         }
-
-        public void SetPath(List<Node> path)
-        {
-            Path = path;
-        }
-
+        
         void OnDrawGizmos()
         {
             if (!_drawGizmos) return;
@@ -137,8 +151,8 @@ namespace FiberCase.Grid_System
             {
                 foreach (Node n in Path)
                 {
-                    Gizmos.color = Color.black;
-                    Gizmos.DrawCube(n.WorldPosition, Vector3.one * (_nodeSize - 0.1f));
+                    Gizmos.color = Color.green;
+                    Gizmos.DrawCube(n.WorldPosition, new Vector3(_nodeSize - 0.1f, .1f, _nodeSize - 0.1f));
                 }
             }
 
