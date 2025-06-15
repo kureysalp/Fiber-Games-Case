@@ -46,7 +46,7 @@ namespace FiberCase.Path_Finding
                         if (!neighbour.Walkable || neighbour.IsOccupied || closedSet.Contains(neighbour))
                             continue;
 
-                        int tentativeGCost = currentNode.GCost + 10;
+                        var tentativeGCost = currentNode.GCost + 10;
 
                         if (tentativeGCost < neighbour.GCost || !openSet.Contains(neighbour))
                         {
@@ -88,7 +88,7 @@ namespace FiberCase.Path_Finding
             var distanceX = Mathf.Abs(nodeA.Position.x - nodeB.Position.x);
             var distanceY = Mathf.Abs(nodeA.Position.y - nodeB.Position.y);
 
-            return 10* (distanceX + distanceY);
+            return 10 * (distanceX + distanceY);
         }
     }
 }

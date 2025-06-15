@@ -140,7 +140,8 @@ namespace FiberCase.Gameplay
                 coin.transform.SetParent(null);
                 coin.ReturnToPool();
             }
-            
+            CoinStack.Clear();
+            _node = null;
             ReturnToPool();
         }
     }
