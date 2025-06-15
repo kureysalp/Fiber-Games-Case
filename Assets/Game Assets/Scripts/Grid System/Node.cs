@@ -41,18 +41,13 @@ namespace FiberCase.Grid_System
             WorldPosition = worldPosition;
         }
 
-        public void SetWalkable(bool walkable)
-        {
-            Walkable = walkable;    
-        }
-
         public void CoinStackOnThisNode(CoinHolder coinHolder)
         {
             CoinHolder = coinHolder;
             IsOccupied = true;
         }
 
-        public void RemoveCoinHolder()
+        public void ResetNode()
         {
             CoinHolder = null;
             IsOccupied = false;

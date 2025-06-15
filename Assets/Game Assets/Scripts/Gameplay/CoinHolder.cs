@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using FiberCase.Event;
 using FiberCase.Grid_System;
@@ -11,10 +12,20 @@ namespace FiberCase.Gameplay
     public class CoinHolder : Poolable
     {
         public Stack<Coin> CoinStack { get;} = new();
-
-        private const float CoinHeight = 0.12f;
-
+        
         private Node _node;
+        
+        [SerializeField] private CoinConfiguration _coinConfiguration;
+
+        private void OnEnable()
+        {
+            EventBus.Subscribe<PlayAgainEvent>(ResetHolder);
+        }
+        
+        private void OnDisable()
+        {
+            EventBus.Unsubscribe<PlayAgainEvent>(ResetHolder);
+        }
 
         public void CreateStack(CoinStack coinStack, CoinColorCoding  coinColorCoding)
         {
@@ -30,7 +41,7 @@ namespace FiberCase.Gameplay
                     
                     CoinStack.Push(newCoin);
                     newCoin.transform.SetParent(transform);
-                    newCoin.transform.localPosition = Vector3.zero + CoinHeight * CoinStack.Count * Vector3.up;
+                    newCoin.transform.localPosition = Vector3.zero + _coinConfiguration.CoinStackHeight * CoinStack.Count * Vector3.up;
                 }
             }
         }
@@ -47,7 +58,7 @@ namespace FiberCase.Gameplay
             {
                 var coinToDeposit = CoinStack.Pop();
                 
-                var coinEndPosition = coinHolder.CoinStack.Peek().transform.position + Vector3.up * CoinHeight;
+                var coinEndPosition = coinHolder.CoinStack.Peek().transform.position + Vector3.up * _coinConfiguration.CoinStackHeight;
                 await MoveCoin(coinToDeposit, coinEndPosition);
                 coinHolder.CoinStack.Push(coinToDeposit);
                 coinToDeposit.transform.SetParent(coinHolder.transform);
@@ -71,7 +82,7 @@ namespace FiberCase.Gameplay
                 else break;
             }
 
-            if (sameCoinCount >= 10) //TODO: Make this variable
+            if (sameCoinCount >= _coinConfiguration.CoinPopAmount)
             {
                 for (int i = 0; i < sameCoinCount; i++)
                 {
@@ -93,7 +104,7 @@ namespace FiberCase.Gameplay
 
         private void RemoveCoinHolder()
         {
-            _node.RemoveCoinHolder();
+            _node.ResetNode();
             _node = null;
             ReturnToPool();
         }
@@ -103,20 +114,34 @@ namespace FiberCase.Gameplay
             _node = node;
         }
         
-        private static async Task MoveCoin(Coin coinToDeposit, Vector3 coinEndPosition)
+        private async Task MoveCoin(Coin coinToDeposit, Vector3 coinEndPosition)
         {
             var coinStartPosition = coinToDeposit.transform.position;
+            var middlePosition = (coinStartPosition + coinEndPosition) / 2 + Vector3.up * _coinConfiguration.CoinMoveHeight;
                 
             var elapsedTime = 0f;
-            var moveDuration = .1f; //TODO: Move this to editor.
+            var moveDuration = _coinConfiguration.CoinMoveDuration;
 
             while (elapsedTime < moveDuration)
             {
                 elapsedTime += Time.deltaTime;
-                var nextPosition = Vector3.Lerp(coinStartPosition, coinEndPosition, elapsedTime / moveDuration);
-                coinToDeposit.transform.position = nextPosition;
+                var nextPositionA = Vector3.Lerp(coinStartPosition, middlePosition, elapsedTime / moveDuration);
+                var nextPositionB = Vector3.Lerp(middlePosition, coinEndPosition, elapsedTime / moveDuration);
+                var realNextPosition = Vector3.Lerp(nextPositionA, nextPositionB, elapsedTime / moveDuration);
+                coinToDeposit.transform.position = realNextPosition;
                 await Task.Yield();
             }
+        }
+
+        private void ResetHolder(PlayAgainEvent playAgainEvent)
+        {
+            foreach (var coin in CoinStack)
+            {
+                coin.transform.SetParent(null);
+                coin.ReturnToPool();
+            }
+            
+            ReturnToPool();
         }
     }
 }

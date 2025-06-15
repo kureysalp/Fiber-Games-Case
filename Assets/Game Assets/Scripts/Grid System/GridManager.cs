@@ -1,7 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using FiberCase.Event;
 using FiberCase.Path_Finding;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace FiberCase.Grid_System
 {
@@ -24,8 +27,10 @@ namespace FiberCase.Grid_System
 
         public List<Node> Path { get; private set; }
 
-        [SerializeField] private Transform _startNodePosition;
-        public Node StartNode { get; private set; }
+        [SerializeField] private Transform _firstStartNodePosition;
+        [SerializeField] private Transform _secondStartNodePosition;
+        public Node FirstStartNode { get; private set; }
+        public Node SecondStartNode { get; private set; }
         
         private PathFinding _pathFinding;
 
@@ -39,6 +44,18 @@ namespace FiberCase.Grid_System
         private void Start()
         {
             CreateGrid();
+        }
+
+        private void OnEnable()
+        {
+            EventBus.Subscribe<ReadyForPlayerInputEvent>(CheckStartNodesAvailability);
+            EventBus.Subscribe<PlayAgainEvent>(ResetAllNodes);
+        }
+        
+        private void OnDisable()
+        {
+            EventBus.Unsubscribe<ReadyForPlayerInputEvent>(CheckStartNodesAvailability);
+            EventBus.Unsubscribe<PlayAgainEvent>(ResetAllNodes);
         }
 
         private void CreateGrid()
@@ -66,7 +83,8 @@ namespace FiberCase.Grid_System
                 }
             }
 
-            StartNode = GetNodeFromWorldPosition(_startNodePosition.position);
+            FirstStartNode = GetNodeFromWorldPosition(_firstStartNodePosition.position);
+            SecondStartNode = GetNodeFromWorldPosition(_secondStartNodePosition.position);
         }
 
         public async Task<List<Node>> FindPathAsync(Vector3 targetPosition)
@@ -74,7 +92,11 @@ namespace FiberCase.Grid_System
             var targetNode = GetNodeFromWorldPosition(targetPosition);
             if (targetNode == null) return null;
 
-            Path = await _pathFinding.FindPathAsync(GetNodeFromWorldPosition(_startNodePosition.position), targetNode);
+            var startNode = FirstStartNode;
+            if(FirstStartNode.IsOccupied)
+                startNode = SecondStartNode;
+
+            Path = await _pathFinding.FindPathAsync(startNode, targetNode);
             return Path;
         }
 
@@ -155,7 +177,23 @@ namespace FiberCase.Grid_System
                     Gizmos.DrawCube(n.WorldPosition, new Vector3(_nodeSize - 0.1f, .1f, _nodeSize - 0.1f));
                 }
             }
+        }
 
+        private void CheckStartNodesAvailability(ReadyForPlayerInputEvent readyEvent)
+        {
+            var bothIsOccupied = FirstStartNode.IsOccupied && SecondStartNode.IsOccupied;
+
+            if (bothIsOccupied)
+                EventBus.Raise(new GameLostEvent());
+        }
+
+        private void ResetAllNodes(PlayAgainEvent playAgainEvent)
+        {
+            foreach (var node in Grid)
+            {
+                if(node.Walkable)
+                    node.ResetNode();
+            }
         }
     }
 }

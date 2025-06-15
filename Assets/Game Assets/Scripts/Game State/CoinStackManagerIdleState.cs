@@ -1,4 +1,5 @@
-﻿using FiberCase.Gameplay;
+﻿using FiberCase.Event;
+using FiberCase.Gameplay;
 using UnityEngine;
 
 namespace FiberCase.Game_State
@@ -13,7 +14,7 @@ namespace FiberCase.Game_State
         public override void EnterState()
         {
             base.EnterState();
-            
+            EventBus.Raise(new ReadyForPlayerInputEvent());
             // TODO: Hide input is busy icon. 
         }
 

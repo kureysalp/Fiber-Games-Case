@@ -17,19 +17,23 @@ namespace FiberCase.Gameplay
         private void OnEnable()
         {
             EventBus.Subscribe<CoinsPoppedEvent>(CoinsPopped);
+            EventBus.Subscribe<PlayAgainEvent>(ResetScore);
+        }
+        
+        private void OnDisable()
+        {
+            EventBus.Unsubscribe<CoinsPoppedEvent>(CoinsPopped);
+            EventBus.Unsubscribe<PlayAgainEvent>(ResetScore);
         }
 
         private void CoinsPopped(CoinsPoppedEvent coinsPoppedEvent)
         {
-            Debug.Log("Got score");
             var scoreGained = coinsPoppedEvent.CoinAmount * coinsPoppedEvent.CoinValue * _scoreMultiplier;
             _currentScore += scoreGained;
             SetScoreBar();
 
             if (CheckIfReachedGoal())
-            {
-                //TODO: Win the game.
-            }
+                EventBus.Raise(new GameWonEvent());
         }
 
         private void SetScoreBar()
@@ -42,10 +46,10 @@ namespace FiberCase.Gameplay
             return _currentScore >= _scoreGoal;
         }
 
-        private void OnDisable()
+        private void ResetScore(PlayAgainEvent playAgainEvent)
         {
-            EventBus.Unsubscribe<CoinsPoppedEvent>(CoinsPopped);
-
+            _currentScore = 0;
+            SetScoreBar();
         }
     }
 }

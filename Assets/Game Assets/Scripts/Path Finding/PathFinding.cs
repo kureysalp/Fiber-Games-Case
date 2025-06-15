@@ -77,6 +77,8 @@ namespace FiberCase.Path_Finding
                 currentNode = currentNode.Parent;
             }
 
+            if(!startNode.IsOccupied)
+                path.Add(startNode);
             path.Reverse();
             return path;
         }

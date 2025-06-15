@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using FiberCase.Event;
 using FiberCase.Game_State;
 using FiberCase.Grid_System;
 using FiberCase.Scriptable_Objects;
@@ -34,19 +35,16 @@ namespace FiberCase.Gameplay
         public Transform CoinHolderHoldPosition => _coinHolderHoldPosition;
 
         [SerializeField] private Transform _coinHolderQueuePosition;
-        public Transform CoinHolderQueuePosition => _coinHolderQueuePosition;
 
 
         [SerializeField] private float _moveSpeed;
         public float MoveSpeed => _moveSpeed;
 
 
-        [SerializeField] private CoinStack[] _coinStackCollection; 
-        public CoinStack[] CoinStackCollection => _coinStackCollection;
+        [SerializeField] private CoinStack[] _coinStackCollection;
+        private CoinStack[] CoinStackCollection => _coinStackCollection;
         
         [SerializeField] private CoinColorCoding _coinColorCoding;
-
-
 
         private void Awake()
         {
@@ -64,10 +62,19 @@ namespace FiberCase.Gameplay
             _stackManagerStateMachine.Initialize(IdleState);
         }
 
+        private void OnEnable()
+        {
+            EventBus.Subscribe<PlayAgainEvent>(ResetManager);
+        }
+        
+        private void OnDisable()
+        {
+            EventBus.Unsubscribe<PlayAgainEvent>(ResetManager);
+        }
+
         private void Update()
         {
             _stackManagerStateMachine.CurrentState.UpdateState();
-            //_ = _stackManagerStateMachine.CurrentState.UpdateStateAsync();
         }
 
         public void SetStackMovePath(List<Node> path)
@@ -110,6 +117,12 @@ namespace FiberCase.Gameplay
         {
             CurrentCoinHolder = CoinHolderOnQueue;
             CoinHolderOnQueue = null;
+        }
+
+        private void ResetManager(PlayAgainEvent playAgainEvent)
+        {
+            InitializeFirstCoinStack();
+            _stackManagerStateMachine.ChangeState(IdleState);
         }
         
     }
